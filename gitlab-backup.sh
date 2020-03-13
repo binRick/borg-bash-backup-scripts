@@ -15,13 +15,15 @@ if [[ ! -d $BORG_REPO ]]; then
 	borg init -e repokey
 fi
 
-BORG_REMOTE_CMD="cd $REMOTE_BACKUP_SERVER_PATH && time borg create --progress --info ::$(date +%s) $REMOTE_BACKUP_SERVER_PATH/*_gitlab_backup.tar && rm -f $REMOTE_BACKUP_SERVER_PATH/*_gitlab_backup.tar"
-remote_cmd="ssh root@$REMOTE_BACKUP_SERVER \"$BORG_REMOTE_CMD\""
-echo remote_cmd=$remote_cmd
+create_remote_borg_repo(){
+    BORG_REMOTE_CMD="export BORG_REPO=$REMOTE_BACKUP_SERVER_PATH/.archive.borg && export BORG_PASSPHRASE=$BORG_PASSPHRASE && cd $REMOTE_BACKUP_SERVER_PATH && time borg create --progress --info ::$(date +%s) $REMOTE_BACKUP_SERVER_PATH/*_gitlab_backup.tar && rm -f $REMOTE_BACKUP_SERVER_PATH/*_gitlab_backup.tar"
+    remote_cmd="ssh root@$REMOTE_BACKUP_SERVER \"$BORG_REMOTE_CMD\""
+    echo $remote_cmd
+    eval $remote_cmd
+}
 
 
 
-exit 1
 echo -e "Creating Gitlab Backup"
 gitlab-rake gitlab:backup:create 2>&1 > $GITLAB_BACKUPS_DIR/create_$(date +%s).txt
 echo -e "   OK"
@@ -43,7 +45,13 @@ for oldFile in $(find /backup/*_gitlab_backup.tar -mtime +20); do
 done
 
 
-
 command rm -f /backup/*_gitlab_backup.tar
+
+create_remote_borg_repo
+exit_code=$?
+echo "Create Remote Borg Repo Exited $exit_code"
+
+
+exit $exit_code
 
 exit
