@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 
 [[ -f "$ENV_FILE" ]] && source $ENV_FILE
 [[ "$BORG_PASSPHRASE" == "" ]] && echo Invalid BORG_PASSPHRASE && exit 1
