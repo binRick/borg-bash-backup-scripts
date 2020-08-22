@@ -24,7 +24,7 @@ RSYNC_ARGS="--bwlimit=$BW_LIMIT_KBPS -ar --progress --partial"
 
 
 
-source functions.sh
+#source functions.sh
 [[ ! -f ~/.ansi ]] && wget -q4 https://raw.githubusercontent.com/fidian/ansi/master/ansi -O ~/.ansi && chmod 600 ~/.ansi
 source ~/.ansi
 
