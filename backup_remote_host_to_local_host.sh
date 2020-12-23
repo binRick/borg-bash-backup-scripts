@@ -70,9 +70,9 @@ for REMOTE_FILESYSTEM_TO_BACKUP in $(get_remote_filesystems) $ADDITIONAL_FILESYS
     cmd="time command ssh -tt -R $FORWARDED_PORT:127.0.0.1:22 $REMOTE_USER@$REMOTE_HOST \"time BORG_RELOCATED_REPO_ACCESS_IS_OK=yes BORG_PASSPHRASE='$BORG_PASSPHRASE' BORG_REPO='ssh://$LOCAL_USER@$FORWARDED_HOST:$FORWARDED_PORT${LOCAL_BACKUP_STORAGE_FOLDER}' BORG_REMOTE_PATH='$LOCAL_BORG' '$REMOTE_BORG' create --rsh 'ssh -ostricthostkeychecking=no -ouserknownhostsfile=/dev/null -q' --stats --one-file-system --numeric-owner -v -x --progress --lock-wait 10 --remote-ratelimit '$BW_LIMIT_KBPS' ::$LOCAL_BACKUP_REPO_NAME $REMOTE_FILESYSTEM_TO_BACKUP\""
 
     echo -e "\n\n"
-    ansi --green "        $cmd"
+    ansi --green --bg-black"        $cmd                        "
     echo -e "\n"
-    ansi --green "        Bandwidth Limit = $BW_LIMIT_KBPS KB/s"
+    ansi --yellow --bg-white "        Bandwidth Limit = $BW_LIMIT_KBPS KB/s          "
     echo -e "\n\n"
     set +e
     eval $cmd
