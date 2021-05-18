@@ -10,7 +10,7 @@ source $ENV_FILE
 #[[ -f "$ENV_FILE" ]] && source $ENV_FILE
 [[ "$BORG_REPO_SERVER" == "" ]] && echo Invalid BORG_REPO_SERVER && exit 1
 [[ "$BORG_REPO" == "" ]] && echo Invalid BORG_REPO && exit 1
-[[ "$BW_LIMIT_KBPS" == "" ]] && export BW_LIMIT_KBPS=300
+[[ "$BW_LIMIT_KBPS" == "" ]] && export BW_LIMIT_KBPS=100
 
 set -o nounset          # Disallow expansion of unset variables
 set -o pipefail         # Use last non-zero exit code in a pipeline
@@ -64,10 +64,11 @@ REMOTE_BORG="$(get_remote_borg_path)"
 
 for REMOTE_FILESYSTEM_TO_BACKUP in $(get_remote_filesystems) $ADDITIONAL_FILESYSTEMS_TO_BACKUP; do
     echo -e backing up $REMOTE_FILESYSTEM_TO_BACKUP
-    LOCAL_BACKUP_REPO_NAME="${REMOTE_HOSTNAME}-$(echo -e "$REMOTE_FILESYSTEM_TO_BACKUP"|tr '/' '_')-$(date +%Y-%M-%d-1)"
+    LOCAL_BACKUP_REPO_NAME="${REMOTE_HOSTNAME}-$(echo -e "$REMOTE_FILESYSTEM_TO_BACKUP"|tr '/' '_')-$(date +%Y-%m-%d-1)"
 
+EXCLUDES="--exclude '/*/.npm' --exclude '/*/__pycache__' --exclude '/*/node_modules' --exclude '/*/site-packages' --exclude '/*/.gem/ruby/gems' --exclude '/usr/lib/modules' --exclude '/usr/lib/jvm' --exclude '/var/lib/yum/cache' --exclude '/usr/src/kernels/*' --exclude 'backup/VAR_LIB_CONTAINERS/*'"
 
-    cmd="time command ssh -tt -R $FORWARDED_PORT:127.0.0.1:22 $REMOTE_USER@$REMOTE_HOST \"time BORG_RELOCATED_REPO_ACCESS_IS_OK=yes BORG_PASSPHRASE='$BORG_PASSPHRASE' BORG_REPO='ssh://$LOCAL_USER@$FORWARDED_HOST:$FORWARDED_PORT${LOCAL_BACKUP_STORAGE_FOLDER}' BORG_REMOTE_PATH='$LOCAL_BORG' '$REMOTE_BORG' create --rsh 'ssh -ostricthostkeychecking=no -ouserknownhostsfile=/dev/null -q' --stats --one-file-system --numeric-owner -v -x --progress --lock-wait 10 --remote-ratelimit '$BW_LIMIT_KBPS' ::$LOCAL_BACKUP_REPO_NAME $REMOTE_FILESYSTEM_TO_BACKUP\""
+    cmd="time command ssh -tt -R $FORWARDED_PORT:127.0.0.1:22 $REMOTE_USER@$REMOTE_HOST \"time BORG_RELOCATED_REPO_ACCESS_IS_OK=yes BORG_PASSPHRASE='$BORG_PASSPHRASE' BORG_REPO='ssh://$LOCAL_USER@$FORWARDED_HOST:$FORWARDED_PORT${LOCAL_BACKUP_STORAGE_FOLDER}' BORG_REMOTE_PATH='$LOCAL_BORG' '$REMOTE_BORG' create --rsh 'ssh -oLogLevel=error -ostricthostkeychecking=no -ouserknownhostsfile=/dev/null -q' --stats $EXCLUDES --exclude '/var/log/journal' --exclude='/boot' --exclude '/var/lib/containers' --exclude '/.swap' --one-file-system --numeric-owner -v -x --progress --lock-wait 10 --remote-ratelimit '$BW_LIMIT_KBPS' ::$LOCAL_BACKUP_REPO_NAME $REMOTE_FILESYSTEM_TO_BACKUP\""
 
     echo -e "\n\n"
     ansi --green --bg-black"        $cmd                        "
