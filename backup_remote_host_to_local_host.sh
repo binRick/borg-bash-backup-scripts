@@ -66,7 +66,7 @@ for REMOTE_FILESYSTEM_TO_BACKUP in $(get_remote_filesystems) $ADDITIONAL_FILESYS
     echo -e backing up $REMOTE_FILESYSTEM_TO_BACKUP
     LOCAL_BACKUP_REPO_NAME="${REMOTE_HOSTNAME}-$(echo -e "$REMOTE_FILESYSTEM_TO_BACKUP"|tr '/' '_')-$(date +%Y-%m-%d-1)"
 
-EXCLUDES="--exclude '/*/.npm' --exclude '/*/__pycache__' --exclude '/*/node_modules' --exclude '/*/site-packages' --exclude '/*/.gem/ruby/gems' --exclude '/usr/lib/modules' --exclude '/usr/lib/jvm' --exclude '/var/lib/yum/cache' --exclude '/usr/src/kernels/*' --exclude 'backup/VAR_LIB_CONTAINERS/*'"
+EXCLUDES="--exclude '/*/.npm' --exclude '/*/__pycache__' --exclude '/*/node_modules' --exclude '/*/site-packages' --exclude '/*/.gem/ruby/gems' --exclude '/usr/lib/modules' --exclude '/usr/lib/jvm' --exclude '/var/lib/yum/cache' --exclude '/usr/src/kernels/*' --exclude '/backup/VAR_LIB_CONTAINERS/*' --exclude '/var/log/audit/*' --exclude '*/.license_server_data/*' --exclude '/root/go/*' --exclude '/root/.cache*' --exclude '/var/tmp/*' --exclude '/*/go/pkg/mod/cache*' --exclude '/*/var/cache/yum/*'"
 
     cmd="time command ssh -tt -R $FORWARDED_PORT:127.0.0.1:22 $REMOTE_USER@$REMOTE_HOST \"time BORG_RELOCATED_REPO_ACCESS_IS_OK=yes BORG_PASSPHRASE='$BORG_PASSPHRASE' BORG_REPO='ssh://$LOCAL_USER@$FORWARDED_HOST:$FORWARDED_PORT${LOCAL_BACKUP_STORAGE_FOLDER}' BORG_REMOTE_PATH='$LOCAL_BORG' '$REMOTE_BORG' create --rsh 'ssh -oLogLevel=error -ostricthostkeychecking=no -ouserknownhostsfile=/dev/null -q' --stats $EXCLUDES --exclude '/var/log/journal' --exclude='/boot' --exclude '/var/lib/containers' --exclude '/.swap' --one-file-system --numeric-owner -v -x --progress --lock-wait 10 --remote-ratelimit '$BW_LIMIT_KBPS' ::$LOCAL_BACKUP_REPO_NAME $REMOTE_FILESYSTEM_TO_BACKUP\""
 
